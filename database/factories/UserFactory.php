@@ -1,0 +1,71 @@
+<?php
+
+namespace Database\Factories;
+
+use App\Enums\UserRole;
+use App\Models\Company;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+
+/**
+ * @extends Factory<User>
+ */
+class UserFactory extends Factory
+{
+    /**
+     * The current password being used by the factory.
+     */
+    protected static ?string $password;
+
+    /**
+     * Define the model's default state.
+     *
+     * @return array<string, mixed>
+     */
+    public function definition(): array
+    {
+        return [
+            'company_id' => null,
+            'name' => fake()->name(),
+            'email' => fake()->unique()->safeEmail(),
+            'role' => UserRole::Admin,
+            'email_verified_at' => now(),
+            'password' => static::$password ??= Hash::make('password'),
+            'remember_token' => Str::random(10),
+        ];
+    }
+
+    /**
+     * The owner of a company.
+     */
+    public function company(Company $company): static
+    {
+        return $this->state([
+            'company_id' => $company->id,
+            'role' => UserRole::Company,
+        ]);
+    }
+
+    /**
+     * An employee of a company.
+     */
+    public function employee(Company $company): static
+    {
+        return $this->state([
+            'company_id' => $company->id,
+            'role' => UserRole::Employee,
+        ]);
+    }
+
+    /**
+     * Indicate that the model's email address should be unverified.
+     */
+    public function unverified(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'email_verified_at' => null,
+        ]);
+    }
+}
